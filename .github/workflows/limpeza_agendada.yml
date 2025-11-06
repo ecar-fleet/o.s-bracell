@@ -1,0 +1,42 @@
+name: Limpeza Agendada SofitView
+
+on:
+  # Roda a cada 15 minutos
+  schedule:
+    - cron: '*/7 * * * *'
+  
+  # Permite que você rode manualmente pela aba "Actions" do GitHub
+  workflow_dispatch:
+
+jobs:
+  run-selenium-scripts:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Obter o código (Checkout)
+        uses: actions/checkout@v4
+
+      - name: 2. Configurar Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: 3. Instalar dependências Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 4. Instalar Google Chrome e ChromeDriver
+        uses: browser-actions/setup-chrome@v1
+
+      - name: 5. Executar os scripts em sequência
+        env:
+          # Mapeia os Secrets do GitHub para variáveis de ambiente
+          SOFIT_USER: ${{ secrets.SOFIT_USER }}
+          SOFIT_PASS: ${{ secrets.SOFIT_PASS }}
+        run: |
+          echo "--- 1. Iniciando script: processar_finalizadas.py ---"
+          python processar_finalizadas.py
+          
+          echo "--- 2. Iniciando script: limpeza_geral.py ---"
+          python limpeza_geral.py
